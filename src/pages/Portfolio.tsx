@@ -1,9 +1,16 @@
-import { useState } from "react";
+import { useState, useRef, useMemo } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useProjects } from "@/contexts/ProjectsContext";
+import { useProjects, Project } from "@/contexts/ProjectsContext";
 import { useOnboarding } from "@/contexts/OnboardingContext";
+import { usePortfolioSettings } from "@/contexts/PortfolioSettingsContext";
+import { exportToPDF, copyToClipboard } from "@/utils/exportUtils";
+import { CaseStudyTemplate } from "@/components/portfolio/templates/CaseStudyTemplate";
+import { GalleryTemplate } from "@/components/portfolio/templates/GalleryTemplate";
+import { SlidesTemplate } from "@/components/portfolio/templates/SlidesTemplate";
+import { OnePageTemplate } from "@/components/portfolio/templates/OnePageTemplate";
+import { toast } from "sonner";
 import {
   ExternalLink,
   Download,
@@ -14,6 +21,10 @@ import {
   Grid3X3,
   Layers,
   Presentation,
+  Copy,
+  Check,
+  Columns,
+  Maximize,
 } from "lucide-react";
 
 const templates = [
@@ -23,11 +34,110 @@ const templates = [
   { id: "onepage", name: "One-pager", icon: LayoutIcon, description: "Resumo compacto" },
 ];
 
+const colors = [
+  { value: "#8B5CF6", name: "Roxo" },
+  { value: "#F97316", name: "Laranja" },
+  { value: "#10B981", name: "Verde" },
+  { value: "#3B82F6", name: "Azul" },
+  { value: "#EC4899", name: "Rosa" },
+  { value: "#EF4444", name: "Vermelho" },
+];
+
+const fonts = [
+  { value: "DM Sans", label: "DM Sans" },
+  { value: "Inter", label: "Inter" },
+  { value: "Poppins", label: "Poppins" },
+  { value: "Playfair Display", label: "Playfair" },
+];
+
 export default function Portfolio() {
   const { projects } = useProjects();
   const { data, generatedProfile } = useOnboarding();
-  const [selectedTemplate, setSelectedTemplate] = useState("case");
+  const { settings, updateSettings } = usePortfolioSettings();
   const [previewMode, setPreviewMode] = useState<"light" | "dark">("dark");
+  const [isExporting, setIsExporting] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const portfolioRef = useRef<HTMLDivElement>(null);
+
+  // Order projects based on settings
+  const orderedProjects = useMemo(() => {
+    if (settings.projectOrder.length === 0) return projects;
+    
+    const orderMap = new Map(settings.projectOrder.map((id, index) => [id, index]));
+    return [...projects].sort((a, b) => {
+      const orderA = orderMap.get(a.id) ?? Infinity;
+      const orderB = orderMap.get(b.id) ?? Infinity;
+      return orderA - orderB;
+    });
+  }, [projects, settings.projectOrder]);
+
+  const profile = {
+    name: data.name || "Seu Nome",
+    area: data.area || "",
+    niche: data.niche || "",
+    bio: generatedProfile || "",
+  };
+
+  const handleExportPDF = async () => {
+    if (!portfolioRef.current) return;
+    
+    setIsExporting(true);
+    try {
+      await exportToPDF("portfolio-preview", `portfolio-${data.name || "meu"}.pdf`);
+      toast.success("PDF exportado com sucesso!");
+    } catch (error) {
+      toast.error("Erro ao exportar PDF");
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const handleShareLink = async () => {
+    const shareUrl = `${window.location.origin}/portfolio?preview=true`;
+    
+    try {
+      await copyToClipboard(shareUrl);
+      setCopied(true);
+      toast.success("Link copiado para a área de transferência!");
+      setTimeout(() => setCopied(false), 2000);
+    } catch (error) {
+      toast.error("Erro ao copiar link");
+    }
+  };
+
+  const handleFullscreen = () => {
+    if (!portfolioRef.current) return;
+    
+    if (!document.fullscreenElement) {
+      portfolioRef.current.requestFullscreen();
+      setIsFullscreen(true);
+    } else {
+      document.exitFullscreen();
+      setIsFullscreen(false);
+    }
+  };
+
+  const renderTemplate = () => {
+    const templateProps = {
+      projects: orderedProjects,
+      profile,
+      settings,
+      previewMode,
+    };
+
+    switch (settings.template) {
+      case "gallery":
+        return <GalleryTemplate {...templateProps} />;
+      case "slides":
+        return <SlidesTemplate {...templateProps} />;
+      case "onepage":
+        return <OnePageTemplate {...templateProps} />;
+      case "case":
+      default:
+        return <CaseStudyTemplate {...templateProps} />;
+    }
+  };
 
   return (
     <Layout>
@@ -46,9 +156,9 @@ export default function Portfolio() {
                 {templates.map((template) => (
                   <button
                     key={template.id}
-                    onClick={() => setSelectedTemplate(template.id)}
+                    onClick={() => updateSettings({ template: template.id as any })}
                     className={`w-full p-3 rounded-lg text-left transition-all flex items-center gap-3 ${
-                      selectedTemplate === template.id
+                      settings.template === template.id
                         ? "bg-primary/10 border border-primary/50 text-primary"
                         : "bg-secondary hover:bg-secondary/80"
                     }`}
@@ -71,6 +181,7 @@ export default function Portfolio() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
+                {/* Preview Mode */}
                 <div>
                   <label className="text-sm font-medium mb-2 block">Modo de preview</label>
                   <div className="flex gap-2">
@@ -93,29 +204,62 @@ export default function Portfolio() {
                   </div>
                 </div>
 
+                {/* Colors */}
                 <div>
-                  <label className="text-sm font-medium mb-2 block">Cores</label>
+                  <label className="text-sm font-medium mb-2 block">Cor primária</label>
                   <div className="flex gap-2">
-                    {["#8B5CF6", "#F97316", "#10B981", "#3B82F6", "#EC4899"].map((color) => (
+                    {colors.map((color) => (
                       <button
-                        key={color}
-                        className="w-8 h-8 rounded-lg border-2 border-border hover:border-primary transition-colors"
-                        style={{ backgroundColor: color }}
+                        key={color.value}
+                        onClick={() => updateSettings({ primaryColor: color.value })}
+                        className={`w-8 h-8 rounded-lg border-2 transition-all hover:scale-110 ${
+                          settings.primaryColor === color.value
+                            ? "border-foreground scale-110"
+                            : "border-transparent"
+                        }`}
+                        style={{ backgroundColor: color.value }}
+                        title={color.name}
                       />
                     ))}
                   </div>
                 </div>
 
+                {/* Typography */}
                 <div>
                   <label className="text-sm font-medium mb-2 block flex items-center gap-2">
                     <Type className="h-4 w-4" /> Tipografia
                   </label>
-                  <select className="w-full h-10 px-3 rounded-lg bg-secondary border border-border text-sm">
-                    <option>DM Sans</option>
-                    <option>Inter</option>
-                    <option>Poppins</option>
-                    <option>Playfair Display</option>
+                  <select
+                    value={settings.font}
+                    onChange={(e) => updateSettings({ font: e.target.value })}
+                    className="w-full h-10 px-3 rounded-lg bg-secondary border border-border text-sm"
+                  >
+                    {fonts.map((font) => (
+                      <option key={font.value} value={font.value}>
+                        {font.label}
+                      </option>
+                    ))}
                   </select>
+                </div>
+
+                {/* Columns */}
+                <div>
+                  <label className="text-sm font-medium mb-2 block flex items-center gap-2">
+                    <Columns className="h-4 w-4" /> Colunas
+                  </label>
+                  <div className="flex gap-2">
+                    {[1, 2, 3].map((cols) => (
+                      <Button
+                        key={cols}
+                        variant={settings.columns === cols ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => updateSettings({ columns: cols as 1 | 2 | 3 })}
+                        className="flex-1"
+                      >
+                        {cols}
+                      </Button>
+                    ))}
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -126,11 +270,36 @@ export default function Portfolio() {
                 <CardTitle className="text-base">Exportar</CardTitle>
               </CardHeader>
               <CardContent className="space-y-2">
-                <Button variant="gradient" className="w-full gap-2">
-                  <ExternalLink className="h-4 w-4" /> Publicar link
+                <Button
+                  variant="gradient"
+                  className="w-full gap-2"
+                  onClick={handleShareLink}
+                >
+                  {copied ? (
+                    <>
+                      <Check className="h-4 w-4" /> Link copiado!
+                    </>
+                  ) : (
+                    <>
+                      <ExternalLink className="h-4 w-4" /> Publicar link
+                    </>
+                  )}
                 </Button>
-                <Button variant="outline" className="w-full gap-2">
-                  <Download className="h-4 w-4" /> Baixar PDF
+                <Button
+                  variant="outline"
+                  className="w-full gap-2"
+                  onClick={handleExportPDF}
+                  disabled={isExporting}
+                >
+                  <Download className="h-4 w-4" />
+                  {isExporting ? "Exportando..." : "Baixar PDF"}
+                </Button>
+                <Button
+                  variant="outline"
+                  className="w-full gap-2"
+                  onClick={handleFullscreen}
+                >
+                  <Maximize className="h-4 w-4" /> Tela cheia
                 </Button>
               </CardContent>
             </Card>
@@ -140,108 +309,40 @@ export default function Portfolio() {
           <div className="flex-1">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-semibold">Preview do Portfólio</h2>
-              <Button variant="ghost" size="sm" className="gap-2">
-                <Eye className="h-4 w-4" /> Tela cheia
-              </Button>
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Eye className="h-4 w-4" />
+                {orderedProjects.length} projeto{orderedProjects.length !== 1 ? "s" : ""}
+              </div>
             </div>
 
             <Card
               variant="glass"
-              className={`overflow-hidden ${
-                previewMode === "dark" ? "bg-[#0a0a0f]" : "bg-white"
-              }`}
+              className="overflow-hidden"
+              ref={portfolioRef}
             >
               <div
+                id="portfolio-preview"
                 className={`p-8 min-h-[600px] ${
-                  previewMode === "dark" ? "text-white" : "text-gray-900"
+                  previewMode === "dark"
+                    ? "bg-[#0a0a0f] text-white"
+                    : "bg-white text-gray-900"
                 }`}
               >
-                {/* Portfolio Preview Content */}
-                <div className="max-w-3xl mx-auto">
-                  {/* Header */}
-                  <div className="text-center mb-12">
-                    <div className="w-20 h-20 mx-auto mb-4 rounded-2xl gradient-primary flex items-center justify-center text-3xl font-bold text-white">
-                      {data.name?.charAt(0) || "P"}
-                    </div>
-                    <h1 className="text-3xl font-bold mb-2">{data.name || "Seu Nome"}</h1>
-                    <p className={previewMode === "dark" ? "text-gray-400" : "text-gray-600"}>
-                      {data.area} • {data.niche}
-                    </p>
+                {orderedProjects.length === 0 ? (
+                  <div
+                    className={`text-center py-24 rounded-xl border border-dashed ${
+                      previewMode === "dark"
+                        ? "border-gray-700 text-gray-500"
+                        : "border-gray-300 text-gray-400"
+                    }`}
+                  >
+                    <Layers className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                    <p className="text-lg font-medium mb-2">Sem projetos ainda</p>
+                    <p>Adicione projetos no Dashboard para visualizar seu portfólio</p>
                   </div>
-
-                  {/* About */}
-                  {generatedProfile && (
-                    <div className="mb-12">
-                      <h2 className="text-xl font-semibold mb-4">Sobre</h2>
-                      <p className={previewMode === "dark" ? "text-gray-300" : "text-gray-700"}>
-                        {generatedProfile}
-                      </p>
-                    </div>
-                  )}
-
-                  {/* Projects */}
-                  <div>
-                    <h2 className="text-xl font-semibold mb-6">Projetos</h2>
-                    {projects.length === 0 ? (
-                      <div
-                        className={`text-center py-12 rounded-xl border border-dashed ${
-                          previewMode === "dark"
-                            ? "border-gray-700 text-gray-500"
-                            : "border-gray-300 text-gray-400"
-                        }`}
-                      >
-                        <p>Adicione projetos no Dashboard</p>
-                      </div>
-                    ) : (
-                      <div className="grid gap-6">
-                        {projects.map((project) => (
-                          <div
-                            key={project.id}
-                            className={`rounded-xl overflow-hidden border ${
-                              previewMode === "dark"
-                                ? "border-gray-800 bg-gray-900/50"
-                                : "border-gray-200 bg-gray-50"
-                            }`}
-                          >
-                            {project.images[0] && (
-                              <img
-                                src={project.images[0]}
-                                alt={project.title}
-                                className="w-full aspect-video object-cover"
-                              />
-                            )}
-                            <div className="p-6">
-                              <h3 className="text-lg font-semibold mb-2">{project.title}</h3>
-                              <p
-                                className={
-                                  previewMode === "dark" ? "text-gray-400" : "text-gray-600"
-                                }
-                              >
-                                {project.description}
-                              </p>
-                              {project.technologies.length > 0 && (
-                                <div className="flex flex-wrap gap-2 mt-4">
-                                  {project.technologies.map((tech) => (
-                                    <span
-                                      key={tech}
-                                      className={`px-2 py-1 text-xs rounded-full ${
-                                        previewMode === "dark"
-                                          ? "bg-gray-800 text-gray-300"
-                                          : "bg-gray-200 text-gray-700"
-                                      }`}
-                                    >
-                                      {tech}
-                                    </span>
-                                  ))}
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
+                ) : (
+                  renderTemplate()
+                )}
               </div>
             </Card>
           </div>
