@@ -1,3 +1,4 @@
+// Video parsing utilities for YouTube and Vimeo
 export function parseVideoUrl(url: string): { type: 'youtube' | 'vimeo' | null; id: string | null } {
   if (!url) return { type: null, id: null };
 
