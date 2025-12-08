@@ -14,7 +14,255 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      analytics_events: {
+        Row: {
+          created_at: string
+          event_type: string
+          id: string
+          ip_address: string | null
+          metadata: Json
+          resource_id: string | null
+          resource_type: string
+          source: string | null
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          event_type: string
+          id?: string
+          ip_address?: string | null
+          metadata?: Json
+          resource_id?: string | null
+          resource_type: string
+          source?: string | null
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          event_type?: string
+          id?: string
+          ip_address?: string | null
+          metadata?: Json
+          resource_id?: string | null
+          resource_type?: string
+          source?: string | null
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      portfolio_settings: {
+        Row: {
+          columns: number
+          created_at: string
+          font: string
+          id: string
+          primary_color: string
+          project_order: string[]
+          template: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          columns?: number
+          created_at?: string
+          font?: string
+          id?: string
+          primary_color?: string
+          project_order?: string[]
+          template?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          columns?: number
+          created_at?: string
+          font?: string
+          id?: string
+          primary_color?: string
+          project_order?: string[]
+          template?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          area: string | null
+          bio: string | null
+          created_at: string
+          experience_level: string | null
+          id: string
+          ideal_client: string | null
+          name: string | null
+          niche: string | null
+          plan: Database["public"]["Enums"]["user_plan"]
+          portfolio_objective: string | null
+          proposal_count: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          area?: string | null
+          bio?: string | null
+          created_at?: string
+          experience_level?: string | null
+          id?: string
+          ideal_client?: string | null
+          name?: string | null
+          niche?: string | null
+          plan?: Database["public"]["Enums"]["user_plan"]
+          portfolio_objective?: string | null
+          proposal_count?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          area?: string | null
+          bio?: string | null
+          created_at?: string
+          experience_level?: string | null
+          id?: string
+          ideal_client?: string | null
+          name?: string | null
+          niche?: string | null
+          plan?: Database["public"]["Enums"]["user_plan"]
+          portfolio_objective?: string | null
+          proposal_count?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      projects: {
+        Row: {
+          briefing_description: string | null
+          challenge_description: string | null
+          created_at: string
+          description: string | null
+          display_order: number
+          execution_description: string | null
+          id: string
+          images: string[]
+          links: Json
+          result_description: string | null
+          status: string
+          technologies: string[]
+          title: string
+          updated_at: string
+          user_id: string
+          video_url: string | null
+        }
+        Insert: {
+          briefing_description?: string | null
+          challenge_description?: string | null
+          created_at?: string
+          description?: string | null
+          display_order?: number
+          execution_description?: string | null
+          id?: string
+          images?: string[]
+          links?: Json
+          result_description?: string | null
+          status?: string
+          technologies?: string[]
+          title: string
+          updated_at?: string
+          user_id: string
+          video_url?: string | null
+        }
+        Update: {
+          briefing_description?: string | null
+          challenge_description?: string | null
+          created_at?: string
+          description?: string | null
+          display_order?: number
+          execution_description?: string | null
+          id?: string
+          images?: string[]
+          links?: Json
+          result_description?: string | null
+          status?: string
+          technologies?: string[]
+          title?: string
+          updated_at?: string
+          user_id?: string
+          video_url?: string | null
+        }
+        Relationships: []
+      }
+      proposals: {
+        Row: {
+          budget_items: Json
+          budget_type: string
+          client_email: string | null
+          client_name: string | null
+          closing: string | null
+          cover_image_url: string | null
+          created_at: string
+          id: string
+          introduction: string | null
+          justification: string | null
+          logo_url: string | null
+          primary_color: string
+          project_ids: string[]
+          share_token: string | null
+          status: Database["public"]["Enums"]["proposal_status"]
+          title: string
+          total_value: number
+          updated_at: string
+          user_id: string
+          viewed_at: string | null
+        }
+        Insert: {
+          budget_items?: Json
+          budget_type?: string
+          client_email?: string | null
+          client_name?: string | null
+          closing?: string | null
+          cover_image_url?: string | null
+          created_at?: string
+          id?: string
+          introduction?: string | null
+          justification?: string | null
+          logo_url?: string | null
+          primary_color?: string
+          project_ids?: string[]
+          share_token?: string | null
+          status?: Database["public"]["Enums"]["proposal_status"]
+          title: string
+          total_value?: number
+          updated_at?: string
+          user_id: string
+          viewed_at?: string | null
+        }
+        Update: {
+          budget_items?: Json
+          budget_type?: string
+          client_email?: string | null
+          client_name?: string | null
+          closing?: string | null
+          cover_image_url?: string | null
+          created_at?: string
+          id?: string
+          introduction?: string | null
+          justification?: string | null
+          logo_url?: string | null
+          primary_color?: string
+          project_ids?: string[]
+          share_token?: string | null
+          status?: Database["public"]["Enums"]["proposal_status"]
+          title?: string
+          total_value?: number
+          updated_at?: string
+          user_id?: string
+          viewed_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +271,8 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      proposal_status: "draft" | "sent" | "viewed" | "accepted" | "rejected"
+      user_plan: "free" | "pro"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +399,9 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      proposal_status: ["draft", "sent", "viewed", "accepted", "rejected"],
+      user_plan: ["free", "pro"],
+    },
   },
 } as const
