@@ -107,28 +107,26 @@ export function ProposalsProvider({ children }: { children: ReactNode }) {
     }
 
     try {
-      const insertData = {
-        title: proposal.title,
-        client_name: proposal.client_name,
-        client_email: proposal.client_email,
-        introduction: proposal.introduction,
-        justification: proposal.justification,
-        closing: proposal.closing,
-        project_ids: proposal.project_ids,
-        budget_items: proposal.budget_items as unknown as Record<string, unknown>[],
-        budget_type: proposal.budget_type,
-        total_value: proposal.total_value,
-        logo_url: proposal.logo_url,
-        primary_color: proposal.primary_color,
-        cover_image_url: proposal.cover_image_url,
-        status: proposal.status,
-        viewed_at: proposal.viewed_at,
-        user_id: user.id,
-      };
-
       const { data, error } = await supabase
         .from("proposals")
-        .insert(insertData)
+        .insert({
+          title: proposal.title,
+          client_name: proposal.client_name,
+          client_email: proposal.client_email,
+          introduction: proposal.introduction,
+          justification: proposal.justification,
+          closing: proposal.closing,
+          project_ids: proposal.project_ids,
+          budget_items: JSON.parse(JSON.stringify(proposal.budget_items)),
+          budget_type: proposal.budget_type,
+          total_value: proposal.total_value,
+          logo_url: proposal.logo_url,
+          primary_color: proposal.primary_color,
+          cover_image_url: proposal.cover_image_url,
+          status: proposal.status,
+          viewed_at: proposal.viewed_at,
+          user_id: user.id,
+        })
         .select()
         .single();
 
@@ -160,9 +158,9 @@ export function ProposalsProvider({ children }: { children: ReactNode }) {
     if (!user) return;
 
     try {
-      const updateData = { ...updates } as Record<string, unknown>;
+      const updateData: Record<string, unknown> = { ...updates };
       if (updates.budget_items) {
-        updateData.budget_items = updates.budget_items as unknown as Record<string, unknown>[];
+        updateData.budget_items = JSON.parse(JSON.stringify(updates.budget_items));
       }
       
       const { error } = await supabase
