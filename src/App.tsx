@@ -15,6 +15,8 @@ import Projects from "./pages/Projects";
 import ProjectEditor from "./pages/ProjectEditor";
 import Portfolio from "./pages/Portfolio";
 import Proposals from "./pages/Proposals";
+import ProposalEditor from "./pages/ProposalEditor";
+import PublicProposal from "./pages/PublicProposal";
 import Analytics from "./pages/Analytics";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
@@ -41,6 +43,8 @@ const App = () => (
                       <Route path="/projects/:id" element={<ProjectEditor />} />
                       <Route path="/portfolio" element={<Portfolio />} />
                       <Route path="/proposals" element={<Proposals />} />
+                      <Route path="/proposals/:id" element={<ProposalEditor />} />
+                      <Route path="/p/:token" element={<PublicProposal />} />
                       <Route path="/analytics" element={<Analytics />} />
                       <Route path="*" element={<NotFound />} />
                     </Routes>
