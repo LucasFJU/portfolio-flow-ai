@@ -21,14 +21,13 @@ import {
   Trash2,
   ExternalLink,
   Loader2,
-  Image as ImageIcon,
 } from "lucide-react";
 
 export default function ProposalEditor() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { user, isPro } = useAuth();
-  const { proposals, getProposal, addProposal, updateProposal, publishProposal, canCreateProposal } = useProposals();
+  const { user } = useAuth();
+  const { getProposal, addProposal, updateProposal, publishProposal, canCreateProposal } = useProposals();
   const { projects } = useProjects();
   const { generate, isGenerating } = useAIGenerate();
 
@@ -53,7 +52,8 @@ export default function ProposalEditor() {
   const [generatingField, setGeneratingField] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!isPro && !isNew) {
+    if (isNew && !canCreateProposal) {
+      toast.error("Limite de 5 propostas gratuitas atingido");
       navigate("/proposals");
       return;
     }
@@ -74,7 +74,7 @@ export default function ProposalEditor() {
       setLogoUrl(existingProposal.logo_url || "");
       setCoverImageUrl(existingProposal.cover_image_url || "");
     }
-  }, [existingProposal, isPro, isNew, navigate]);
+  }, [existingProposal, isNew, navigate, canCreateProposal]);
 
   const toggleProject = (projectId: string) => {
     setSelectedProjects((prev) =>
@@ -226,11 +226,6 @@ export default function ProposalEditor() {
         </div>
       </Layout>
     );
-  }
-
-  if (!isPro) {
-    navigate("/proposals");
-    return null;
   }
 
   return (
@@ -399,7 +394,7 @@ export default function ProposalEditor() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-3">
-                  {budgetItems.map((item, index) => (
+                  {budgetItems.map((item) => (
                     <div key={item.id} className="grid grid-cols-12 gap-2 items-center">
                       <div className="col-span-5">
                         <Input
@@ -459,7 +454,7 @@ export default function ProposalEditor() {
             {/* Justification */}
             <Card variant="glass">
               <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle className="text-lg">Justificativa do Valor</CardTitle>
+                <CardTitle className="text-lg">Justificativa</CardTitle>
                 <Button
                   variant="outline"
                   size="sm"
@@ -478,7 +473,7 @@ export default function ProposalEditor() {
                 <Textarea
                   value={justification}
                   onChange={(e) => setJustification(e.target.value)}
-                  placeholder="Explique o valor do seu trabalho e o que está incluso..."
+                  placeholder="Justificativa do valor e benefícios..."
                   rows={4}
                 />
               </CardContent>
@@ -487,7 +482,7 @@ export default function ProposalEditor() {
             {/* Closing */}
             <Card variant="glass">
               <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle className="text-lg">Encerramento</CardTitle>
+                <CardTitle className="text-lg">Fechamento</CardTitle>
                 <Button
                   variant="outline"
                   size="sm"
@@ -506,7 +501,7 @@ export default function ProposalEditor() {
                 <Textarea
                   value={closing}
                   onChange={(e) => setClosing(e.target.value)}
-                  placeholder="Próximos passos, condições de pagamento, validade da proposta..."
+                  placeholder="Mensagem de fechamento e próximos passos..."
                   rows={4}
                 />
               </CardContent>
@@ -515,7 +510,7 @@ export default function ProposalEditor() {
 
           {/* Sidebar */}
           <div className="space-y-6">
-            {/* Customization */}
+            {/* Visual Settings */}
             <Card variant="glass">
               <CardHeader>
                 <CardTitle className="text-lg">Personalização</CardTitle>
@@ -534,12 +529,10 @@ export default function ProposalEditor() {
                     <Input
                       value={primaryColor}
                       onChange={(e) => setPrimaryColor(e.target.value)}
-                      placeholder="#8B5CF6"
                       className="flex-1"
                     />
                   </div>
                 </div>
-
                 <div>
                   <Label htmlFor="logoUrl">URL do Logo</Label>
                   <Input
@@ -548,13 +541,7 @@ export default function ProposalEditor() {
                     onChange={(e) => setLogoUrl(e.target.value)}
                     placeholder="https://..."
                   />
-                  {logoUrl && (
-                    <div className="mt-2 p-2 bg-secondary rounded flex items-center justify-center">
-                      <img src={logoUrl} alt="Logo" className="max-h-12" />
-                    </div>
-                  )}
                 </div>
-
                 <div>
                   <Label htmlFor="coverImageUrl">URL da Capa</Label>
                   <Input
@@ -563,11 +550,6 @@ export default function ProposalEditor() {
                     onChange={(e) => setCoverImageUrl(e.target.value)}
                     placeholder="https://..."
                   />
-                  {coverImageUrl && (
-                    <div className="mt-2 rounded overflow-hidden">
-                      <img src={coverImageUrl} alt="Cover" className="w-full h-32 object-cover" />
-                    </div>
-                  )}
                 </div>
               </CardContent>
             </Card>
@@ -587,58 +569,13 @@ export default function ProposalEditor() {
                   <span className="font-medium">{budgetItems.length}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Tipo</span>
-                  <span className="font-medium capitalize">{budgetType}</span>
-                </div>
-                <div className="flex justify-between pt-2 border-t">
-                  <span className="text-muted-foreground">Valor Total</span>
-                  <span className="font-bold text-primary">
+                  <span className="text-muted-foreground">Valor total</span>
+                  <span className="font-semibold text-primary">
                     R$ {totalValue.toLocaleString("pt-BR")}
                   </span>
                 </div>
               </CardContent>
             </Card>
-
-            {/* Status */}
-            {!isNew && existingProposal && (
-              <Card variant="glass">
-                <CardHeader>
-                  <CardTitle className="text-lg">Status</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center gap-2">
-                    <div
-                      className={`w-2 h-2 rounded-full ${
-                        existingProposal.status === "draft"
-                          ? "bg-muted-foreground"
-                          : existingProposal.status === "sent"
-                          ? "bg-blue-500"
-                          : existingProposal.status === "viewed"
-                          ? "bg-amber-500"
-                          : existingProposal.status === "accepted"
-                          ? "bg-green-500"
-                          : "bg-red-500"
-                      }`}
-                    />
-                    <span className="capitalize">
-                      {existingProposal.status === "draft" && "Rascunho"}
-                      {existingProposal.status === "sent" && "Enviada"}
-                      {existingProposal.status === "viewed" && "Visualizada"}
-                      {existingProposal.status === "accepted" && "Aceita"}
-                      {existingProposal.status === "rejected" && "Recusada"}
-                    </span>
-                  </div>
-                  {existingProposal.share_token && (
-                    <div className="mt-3">
-                      <p className="text-xs text-muted-foreground mb-1">Link público:</p>
-                      <code className="text-xs bg-secondary p-2 rounded block break-all">
-                        {window.location.origin}/p/{existingProposal.share_token}
-                      </code>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            )}
           </div>
         </div>
       </div>
