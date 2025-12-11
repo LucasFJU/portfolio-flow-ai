@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
@@ -36,10 +36,16 @@ import {
 
 export default function Proposals() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const { proposals, loading, canCreateProposal, remainingProposals, deleteProposal, duplicateProposal, publishProposal } = useProposals();
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [publishing, setPublishing] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!authLoading && !user) {
+      navigate("/auth");
+    }
+  }, [user, authLoading, navigate]);
 
   const handleNewProposal = () => {
     if (!canCreateProposal) {
@@ -97,15 +103,18 @@ export default function Proposals() {
     );
   };
 
-  if (!user) {
+  if (authLoading || loading) {
     return (
       <Layout>
-        <div className="container mx-auto px-4 py-8 text-center">
-          <p className="text-muted-foreground mb-4">Faça login para acessar suas propostas.</p>
-          <Button onClick={() => navigate("/auth")}>Fazer Login</Button>
+        <div className="min-h-screen flex items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
       </Layout>
     );
+  }
+
+  if (!user) {
+    return null;
   }
 
   return (

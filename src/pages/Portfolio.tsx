@@ -1,10 +1,12 @@
 import { useState, useRef, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useProjects, Project } from "@/contexts/ProjectsContext";
 import { useOnboarding } from "@/contexts/OnboardingContext";
 import { usePortfolioSettings } from "@/contexts/PortfolioSettingsContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { exportToPDF, copyToClipboard } from "@/utils/exportUtils";
 import { CaseStudyTemplate } from "@/components/portfolio/templates/CaseStudyTemplate";
 import { GalleryTemplate } from "@/components/portfolio/templates/GalleryTemplate";
@@ -25,6 +27,8 @@ import {
   Check,
   Columns,
   Maximize,
+  Plus,
+  Loader2,
 } from "lucide-react";
 
 const templates = [
@@ -51,7 +55,9 @@ const fonts = [
 ];
 
 export default function Portfolio() {
-  const { projects } = useProjects();
+  const navigate = useNavigate();
+  const { user, loading: authLoading } = useAuth();
+  const { projects, loading: projectsLoading } = useProjects();
   const { data, generatedProfile } = useOnboarding();
   const { settings, updateSettings } = usePortfolioSettings();
   const [previewMode, setPreviewMode] = useState<"light" | "dark">("dark");
@@ -59,6 +65,21 @@ export default function Portfolio() {
   const [copied, setCopied] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const portfolioRef = useRef<HTMLDivElement>(null);
+
+  if (authLoading || projectsLoading) {
+    return (
+      <Layout>
+        <div className="min-h-screen flex items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </Layout>
+    );
+  }
+
+  if (!user) {
+    navigate("/auth");
+    return null;
+  }
 
   // Order projects based on settings
   const orderedProjects = useMemo(() => {
@@ -338,13 +359,33 @@ export default function Portfolio() {
                   >
                     <Layers className="h-12 w-12 mx-auto mb-4 opacity-50" />
                     <p className="text-lg font-medium mb-2">Sem projetos ainda</p>
-                    <p>Adicione projetos no Dashboard para visualizar seu portfólio</p>
+                    <p className="mb-4">Adicione projetos para visualizar seu portfólio</p>
+                    <Button
+                      variant="gradient"
+                      onClick={() => navigate("/projects/new")}
+                      className="gap-2"
+                    >
+                      <Plus className="h-4 w-4" /> Criar Primeiro Projeto
+                    </Button>
                   </div>
                 ) : (
                   renderTemplate()
                 )}
               </div>
             </Card>
+
+            {/* Add Project Button when has projects */}
+            {orderedProjects.length > 0 && (
+              <div className="mt-4 text-center">
+                <Button
+                  variant="outline"
+                  onClick={() => navigate("/projects/new")}
+                  className="gap-2"
+                >
+                  <Plus className="h-4 w-4" /> Adicionar Novo Projeto
+                </Button>
+              </div>
+            )}
           </div>
         </div>
       </div>
