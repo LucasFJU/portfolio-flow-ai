@@ -1,4 +1,6 @@
-import React, { createContext, useContext, useState, ReactNode } from "react";
+import React, { createContext, useContext, useState, ReactNode, useEffect, useCallback } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "./AuthContext";
 
 export interface OnboardingData {
   name: string;
@@ -18,6 +20,7 @@ interface OnboardingContextType {
   setIsComplete: (complete: boolean) => void;
   generatedProfile: string | null;
   setGeneratedProfile: (profile: string | null) => void;
+  syncWithSupabase: () => Promise<void>;
 }
 
 const defaultData: OnboardingData = {
@@ -32,6 +35,7 @@ const defaultData: OnboardingData = {
 const OnboardingContext = createContext<OnboardingContextType | undefined>(undefined);
 
 export function OnboardingProvider({ children }: { children: ReactNode }) {
+  const { user, profile, updateProfile } = useAuth();
   const [data, setData] = useState<OnboardingData>(() => {
     const stored = localStorage.getItem("portfol-onboarding");
     return stored ? JSON.parse(stored) : defaultData;
@@ -43,6 +47,26 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
   const [generatedProfile, setGeneratedProfile] = useState<string | null>(() => {
     return localStorage.getItem("portfol-profile");
   });
+
+  // Load data from profile when available
+  useEffect(() => {
+    if (profile) {
+      setData(prev => ({
+        name: profile.name || prev.name,
+        area: profile.area || prev.area,
+        niche: profile.niche || prev.niche,
+        objective: profile.portfolio_objective || prev.objective,
+        experience: profile.experience_level || prev.experience,
+        idealClient: profile.ideal_client || prev.idealClient,
+      }));
+      
+      // If profile has bio, consider onboarding complete
+      if (profile.bio) {
+        setGeneratedProfile(profile.bio);
+        setIsComplete(true);
+      }
+    }
+  }, [profile]);
 
   const updateData = (field: keyof OnboardingData, value: string) => {
     setData((prev) => {
@@ -64,6 +88,25 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // Sync onboarding data with Supabase profile
+  const syncWithSupabase = useCallback(async () => {
+    if (!user) return;
+
+    try {
+      await updateProfile({
+        name: data.name,
+        area: data.area,
+        niche: data.niche,
+        portfolio_objective: data.objective,
+        experience_level: data.experience,
+        ideal_client: data.idealClient,
+        bio: generatedProfile || undefined,
+      });
+    } catch (error) {
+      console.error("Error syncing onboarding data:", error);
+    }
+  }, [user, data, generatedProfile, updateProfile]);
+
   return (
     <OnboardingContext.Provider
       value={{
@@ -75,6 +118,7 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
         setIsComplete: handleSetComplete,
         generatedProfile,
         setGeneratedProfile: handleSetProfile,
+        syncWithSupabase,
       }}
     >
       {children}

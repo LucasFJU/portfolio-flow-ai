@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { useProjects, Project, ProjectStage } from "@/contexts/ProjectsContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { useAIGenerate } from "@/hooks/useAIGenerate";
 import { toast } from "sonner";
 import { isValidVideoUrl, getVideoThumbnail } from "@/utils/videoUtils";
 import {
@@ -106,6 +107,7 @@ export default function ProjectEditor() {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const { addProject, updateProject, getProject, loading: projectsLoading } = useProjects();
+  const { generate, isGenerating } = useAIGenerate();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -120,7 +122,6 @@ export default function ProjectEditor() {
   );
   const [newTech, setNewTech] = useState("");
   const [newLink, setNewLink] = useState({ label: "", url: "" });
-  const [isGenerating, setIsGenerating] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
 
   // Drag and drop sensors
@@ -239,17 +240,19 @@ export default function ProjectEditor() {
   };
 
   const generateNarrative = async () => {
-    setIsGenerating(true);
-    await new Promise((resolve) => setTimeout(resolve, 1500));
+    const narrative = await generate("project-narrative", {
+      title: project.title,
+      briefing: project.stages.briefing.description,
+      challenge: project.stages.challenge.description,
+      execution: project.stages.execution.description,
+      result: project.stages.result.description,
+      technologies: project.technologies,
+    });
     
-    const narrative = `Este projeto representa uma jornada criativa única, desde o briefing inicial até resultados mensuráveis. A abordagem focou em resolver os desafios principais mantendo a essência do cliente em cada decisão de design.`;
-    
-    setProject((prev) => ({
-      ...prev,
-      description: narrative,
-    }));
-    setIsGenerating(false);
-    toast.success("Narrativa gerada com IA!");
+    if (narrative) {
+      setProject((prev) => ({ ...prev, description: narrative }));
+      toast.success("Narrativa gerada com IA!");
+    }
   };
 
   const handleSave = async () => {

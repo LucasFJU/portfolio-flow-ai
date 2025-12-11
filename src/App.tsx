@@ -19,6 +19,7 @@ import ProposalEditor from "./pages/ProposalEditor";
 import PublicProposal from "./pages/PublicProposal";
 import Analytics from "./pages/Analytics";
 import Auth from "./pages/Auth";
+import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -46,6 +47,7 @@ const App = () => (
                       <Route path="/proposals/:id" element={<ProposalEditor />} />
                       <Route path="/p/:token" element={<PublicProposal />} />
                       <Route path="/analytics" element={<Analytics />} />
+                      <Route path="/profile" element={<Profile />} />
                       <Route path="*" element={<NotFound />} />
                     </Routes>
                   </BrowserRouter>
