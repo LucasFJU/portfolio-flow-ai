@@ -8,6 +8,8 @@ import { Progress } from "@/components/ui/progress";
 import { Card } from "@/components/ui/card";
 import { useOnboarding } from "@/contexts/OnboardingContext";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useAIGenerate } from "@/hooks/useAIGenerate";
+import { toast } from "sonner";
 
 const areas = [
   "UX/UI Design",
@@ -62,11 +64,11 @@ function OnboardingStep({ children, title, subtitle }: StepProps) {
 }
 
 export function OnboardingFlow() {
-  const { data, updateData, setIsComplete, setGeneratedProfile } = useOnboarding();
+  const { data, updateData, setIsComplete, setGeneratedProfile, syncWithSupabase } = useOnboarding();
   const [step, setStep] = useState(0);
-  const [isGenerating, setIsGenerating] = useState(false);
   const navigate = useNavigate();
   const { theme, toggleTheme } = useTheme();
+  const { generate, isGenerating } = useAIGenerate();
 
   const totalSteps = 6;
   const progress = ((step + 1) / totalSteps) * 100;
@@ -88,20 +90,27 @@ export function OnboardingFlow() {
     navigate("/dashboard");
   };
 
-  const generateProfile = async () => {
-    setIsGenerating(true);
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-    
-    const profile = `Como ${data.name}, você é um profissional de ${data.area} especializado em ${data.niche}. Com ${data.experience.toLowerCase()}, seu foco está em ${data.objective.toLowerCase()}. Seu portfólio deve destacar projetos que ressoem com ${data.idealClient}, mostrando resultados tangíveis e seu processo criativo único.`;
-    
-    setGeneratedProfile(profile);
-    setIsGenerating(false);
-  };
-
   const handleComplete = async () => {
-    await generateProfile();
-    setIsComplete(true);
-    navigate("/dashboard");
+    try {
+      const profile = await generate("profile", {
+        name: data.name,
+        area: data.area,
+        niche: data.niche,
+        objective: data.objective,
+        experience: data.experience,
+        idealClient: data.idealClient,
+      });
+      
+      if (profile) {
+        setGeneratedProfile(profile);
+      }
+      
+      await syncWithSupabase();
+      setIsComplete(true);
+      navigate("/dashboard");
+    } catch (error) {
+      toast.error("Erro ao gerar perfil. Tente novamente.");
+    }
   };
 
   const canProceed = () => {
