@@ -1,17 +1,39 @@
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, Grid3X3, List } from "lucide-react";
+import { Plus, Grid3X3, List, Loader2 } from "lucide-react";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { ProjectCard } from "@/components/dashboard/ProjectCard";
 import { EmptyProjects } from "@/components/dashboard/EmptyProjects";
 import { useProjects } from "@/contexts/ProjectsContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { useState } from "react";
 
 export default function Projects() {
-  const { projects, deleteProject, addProject } = useProjects();
+  const { user, loading: authLoading } = useAuth();
+  const { projects, loading: projectsLoading, deleteProject, addProject } = useProjects();
   const navigate = useNavigate();
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+
+  useEffect(() => {
+    if (!authLoading && !user) {
+      navigate("/auth");
+    }
+  }, [user, authLoading, navigate]);
+
+  if (authLoading || projectsLoading) {
+    return (
+      <Layout>
+        <div className="min-h-screen flex items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </Layout>
+    );
+  }
+
+  if (!user) {
+    return null;
+  }
 
   const handleCreateProject = () => {
     navigate("/projects/new");
@@ -21,18 +43,16 @@ export default function Projects() {
     navigate(`/projects/${id}`);
   };
 
-  const handleDuplicateProject = (id: string) => {
+  const handleDuplicateProject = async (id: string) => {
     const project = projects.find((p) => p.id === id);
     if (project) {
       const { id: _, createdAt, updatedAt, ...rest } = project;
-      addProject({ ...rest, title: `${rest.title} (cópia)` });
-      toast.success("Projeto duplicado com sucesso!");
+      await addProject({ ...rest, title: `${rest.title} (cópia)` });
     }
   };
 
-  const handleDeleteProject = (id: string) => {
-    deleteProject(id);
-    toast.success("Projeto excluído");
+  const handleDeleteProject = async (id: string) => {
+    await deleteProject(id);
   };
 
   return (

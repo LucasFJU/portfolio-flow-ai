@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { useProjects, Project, ProjectStage } from "@/contexts/ProjectsContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { isValidVideoUrl, getVideoThumbnail } from "@/utils/videoUtils";
 import {
@@ -38,6 +39,7 @@ import {
   Eye,
   Check,
   AlertCircle,
+  Loader2,
 } from "lucide-react";
 
 const defaultStage: ProjectStage = { title: "", description: "" };
@@ -102,8 +104,15 @@ function SortableImage({ id, src, onRemove }: { id: string; src: string; onRemov
 export default function ProjectEditor() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { addProject, updateProject, getProject } = useProjects();
+  const { user, loading: authLoading } = useAuth();
+  const { addProject, updateProject, getProject, loading: projectsLoading } = useProjects();
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!authLoading && !user) {
+      navigate("/auth");
+    }
+  }, [user, authLoading, navigate]);
 
   const existingProject = id && id !== "new" ? getProject(id) : null;
   const [project, setProject] = useState<Omit<Project, "id" | "createdAt" | "updatedAt">>(
@@ -124,6 +133,20 @@ export default function ProjectEditor() {
 
   // Image IDs for sortable
   const imageIds = project.images.map((_, index) => `image-${index}`);
+
+  if (authLoading || projectsLoading) {
+    return (
+      <Layout>
+        <div className="min-h-screen flex items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </Layout>
+    );
+  }
+
+  if (!user) {
+    return null;
+  }
 
   const handleDragEnd = useCallback((event: DragEndEvent) => {
     const { active, over } = event;
@@ -229,7 +252,7 @@ export default function ProjectEditor() {
     toast.success("Narrativa gerada com IA!");
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!project.title.trim()) {
       toast.error("Adicione um título ao projeto");
       return;
@@ -242,11 +265,9 @@ export default function ProjectEditor() {
     const status = calculateCompletionStatus(project);
 
     if (existingProject) {
-      updateProject(existingProject.id, { ...project, status });
-      toast.success("Projeto atualizado!");
+      await updateProject(existingProject.id, { ...project, status });
     } else {
-      addProject({ ...project, status });
-      toast.success("Projeto criado!");
+      await addProject({ ...project, status });
     }
     navigate("/dashboard");
   };

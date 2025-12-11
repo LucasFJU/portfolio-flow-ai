@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, Sparkles, ExternalLink } from "lucide-react";
+import { Plus, Sparkles, ExternalLink, Loader2 } from "lucide-react";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { DashboardStats } from "@/components/dashboard/DashboardStats";
@@ -9,12 +9,34 @@ import { EmptyProjects } from "@/components/dashboard/EmptyProjects";
 import { ProfileSummary } from "@/components/dashboard/ProfileSummary";
 import { useProjects } from "@/contexts/ProjectsContext";
 import { useOnboarding } from "@/contexts/OnboardingContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 
 export default function Dashboard() {
-  const { projects, deleteProject, addProject } = useProjects();
+  const { user, loading: authLoading, profile } = useAuth();
+  const { projects, loading: projectsLoading, deleteProject, addProject } = useProjects();
   const { data } = useOnboarding();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!authLoading && !user) {
+      navigate("/auth");
+    }
+  }, [user, authLoading, navigate]);
+
+  if (authLoading || projectsLoading) {
+    return (
+      <Layout>
+        <div className="min-h-screen flex items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </Layout>
+    );
+  }
+
+  if (!user) {
+    return null;
+  }
 
   const handleCreateProject = () => {
     navigate("/projects/new");
@@ -24,19 +46,19 @@ export default function Dashboard() {
     navigate(`/projects/${id}`);
   };
 
-  const handleDuplicateProject = (id: string) => {
+  const handleDuplicateProject = async (id: string) => {
     const project = projects.find((p) => p.id === id);
     if (project) {
       const { id: _, createdAt, updatedAt, ...rest } = project;
-      addProject({ ...rest, title: `${rest.title} (cópia)` });
-      toast.success("Projeto duplicado com sucesso!");
+      await addProject({ ...rest, title: `${rest.title} (cópia)` });
     }
   };
 
-  const handleDeleteProject = (id: string) => {
-    deleteProject(id);
-    toast.success("Projeto excluído");
+  const handleDeleteProject = async (id: string) => {
+    await deleteProject(id);
   };
+
+  const displayName = profile?.name || data.name || "Criativo";
 
   return (
     <Layout>
@@ -45,7 +67,7 @@ export default function Dashboard() {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
           <div>
             <h1 className="text-3xl font-bold">
-              Olá, <span className="text-gradient">{data.name || "Criativo"}</span>
+              Olá, <span className="text-gradient">{displayName}</span>
             </h1>
             <p className="text-muted-foreground mt-1">
               Gerencie seus projetos e construa seu portfólio
