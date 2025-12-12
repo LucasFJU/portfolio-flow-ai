@@ -5,9 +5,14 @@ type AIGenerationType =
   | "profile" 
   | "portfolio-structure" 
   | "project-narrative" 
+  | "project-extract"
   | "proposal-intro" 
   | "proposal-justification" 
-  | "proposal-closing";
+  | "proposal-closing"
+  | "proposal-exclusions"
+  | "proposal-terms"
+  | "proposal-timeline"
+  | "proposal-deliverables";
 
 interface UseAIGenerateOptions {
   onComplete?: (text: string) => void;

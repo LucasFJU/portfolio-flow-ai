@@ -12,6 +12,7 @@ import { useProposals, BudgetItem, Proposal } from "@/contexts/ProposalsContext"
 import { useProjects } from "@/contexts/ProjectsContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAIGenerate } from "@/hooks/useAIGenerate";
+import AdvancedProposalFields from "@/components/proposal/AdvancedProposalFields";
 import { toast } from "sonner";
 import {
   ArrowLeft,
@@ -48,6 +49,14 @@ export default function ProposalEditor() {
   const [primaryColor, setPrimaryColor] = useState("#8B5CF6");
   const [logoUrl, setLogoUrl] = useState("");
   const [coverImageUrl, setCoverImageUrl] = useState("");
+  
+  // Advanced fields
+  const [exclusions, setExclusions] = useState("");
+  const [terms, setTerms] = useState("");
+  const [validityDays, setValidityDays] = useState(15);
+  const [timeline, setTimeline] = useState("");
+  const [deliverables, setDeliverables] = useState("");
+  
   const [saving, setSaving] = useState(false);
   const [generatingField, setGeneratingField] = useState<string | null>(null);
 
@@ -73,6 +82,12 @@ export default function ProposalEditor() {
       setPrimaryColor(existingProposal.primary_color);
       setLogoUrl(existingProposal.logo_url || "");
       setCoverImageUrl(existingProposal.cover_image_url || "");
+      // Advanced fields from DB
+      setExclusions((existingProposal as any).exclusions || "");
+      setTerms((existingProposal as any).terms || "");
+      setValidityDays((existingProposal as any).validity_days || 15);
+      setTimeline((existingProposal as any).timeline || "");
+      setDeliverables((existingProposal as any).deliverables || "");
     }
   }, [existingProposal, isNew, navigate, canCreateProposal]);
 
@@ -113,11 +128,9 @@ export default function ProposalEditor() {
   };
 
   const totalValue = budgetItems.reduce((sum, item) => sum + item.total, 0);
+  const projectTitles = projects.filter((p) => selectedProjects.includes(p.id)).map((p) => p.title).join(", ");
 
   const generateAIText = async (field: "introduction" | "justification" | "closing") => {
-    const selectedProjectsData = projects.filter((p) => selectedProjects.includes(p.id));
-    const projectTitles = selectedProjectsData.map((p) => p.title).join(", ");
-
     setGeneratingField(field);
 
     let type: "proposal-intro" | "proposal-justification" | "proposal-closing" = "proposal-intro";
@@ -169,7 +182,7 @@ export default function ProposalEditor() {
     setSaving(true);
 
     try {
-      const proposalData: Omit<Proposal, "id" | "user_id" | "created_at" | "updated_at" | "share_token"> = {
+      const proposalData: any = {
         title,
         client_name: clientName || null,
         client_email: clientEmail || null,
@@ -185,6 +198,12 @@ export default function ProposalEditor() {
         cover_image_url: coverImageUrl || null,
         status: "draft",
         viewed_at: null,
+        // Advanced fields
+        exclusions: exclusions || null,
+        terms: terms || null,
+        validity_days: validityDays,
+        timeline: timeline || null,
+        deliverables: deliverables || null,
       };
 
       if (isNew) {
@@ -506,6 +525,23 @@ export default function ProposalEditor() {
                 />
               </CardContent>
             </Card>
+
+            {/* Advanced Fields */}
+            <AdvancedProposalFields
+              exclusions={exclusions}
+              setExclusions={setExclusions}
+              terms={terms}
+              setTerms={setTerms}
+              validityDays={validityDays}
+              setValidityDays={setValidityDays}
+              timeline={timeline}
+              setTimeline={setTimeline}
+              deliverables={deliverables}
+              setDeliverables={setDeliverables}
+              clientName={clientName}
+              projectTitles={projectTitles}
+              totalValue={totalValue}
+            />
           </div>
 
           {/* Sidebar */}
@@ -567,6 +603,10 @@ export default function ProposalEditor() {
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Itens no orçamento</span>
                   <span className="font-medium">{budgetItems.length}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Validade</span>
+                  <span className="font-medium">{validityDays} dias</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Valor total</span>

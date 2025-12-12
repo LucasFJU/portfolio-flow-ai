@@ -6,7 +6,7 @@ const corsHeaders = {
 };
 
 interface AIRequest {
-  type: "profile" | "portfolio-structure" | "project-narrative" | "proposal-intro" | "proposal-justification" | "proposal-closing";
+  type: string;
   context: Record<string, unknown>;
 }
 
@@ -36,6 +36,21 @@ A narrativa deve:
 - Ter entre 2-4 parágrafos
 Use linguagem profissional e persuasiva.`,
 
+  "project-extract": `Você é um especialista em estruturar projetos para portfólios profissionais.
+Com base nas informações fornecidas, extraia e estruture os seguintes elementos em português brasileiro:
+- Problema: O problema que o cliente enfrentava
+- Solução: Como o problema foi resolvido
+- Impacto: O impacto gerado pelo projeto
+- Métricas: Números e resultados mensuráveis
+
+Formate a resposta EXATAMENTE assim:
+Problema: [descrição do problema]
+Solução: [descrição da solução]
+Impacto: [descrição do impacto]
+Métricas: [métricas e resultados]
+
+Seja conciso e focado em resultados.`,
+
   "proposal-intro": `Você é um especialista em propostas comerciais para serviços criativos.
 Escreva uma introdução profissional e personalizada para uma proposta comercial em português brasileiro.
 A introdução deve:
@@ -62,6 +77,42 @@ O fechamento deve:
 - Incluir call-to-action claro
 - Ter entre 1-2 parágrafos
 Seja entusiasmado mas profissional.`,
+
+  "proposal-exclusions": `Você é um especialista em propostas comerciais para serviços criativos.
+Gere uma lista clara do que NÃO está incluso na proposta em português brasileiro.
+A lista deve:
+- Usar bullet points
+- Ser clara e objetiva
+- Prevenir mal-entendidos futuros
+- Incluir itens comuns que geram retrabalho
+Foque em proteger o profissional sem ser negativo.`,
+
+  "proposal-terms": `Você é um especialista em propostas comerciais para serviços criativos.
+Gere termos e condições profissionais para a proposta em português brasileiro.
+Os termos devem incluir:
+- Condições de pagamento
+- Número de revisões incluídas
+- Prazo de entrega
+- Condições de cancelamento
+Use bullet points e seja claro.`,
+
+  "proposal-timeline": `Você é um especialista em gestão de projetos criativos.
+Gere um cronograma de projeto com marcos claros em português brasileiro.
+O cronograma deve:
+- Dividir o projeto em fases
+- Incluir marcos de entrega
+- Ser realista e profissional
+- Usar formato de semanas
+Use bullet points e seja específico.`,
+
+  "proposal-deliverables": `Você é um especialista em propostas comerciais para serviços criativos.
+Gere uma lista de entregáveis do projeto em português brasileiro.
+A lista deve:
+- Usar bullet points
+- Ser específica e tangível
+- Incluir formatos de entrega
+- Mostrar valor agregado
+Foque em clareza e profissionalismo.`,
 };
 
 serve(async (req) => {
@@ -115,13 +166,21 @@ Execução: ${context.execution || "Não informado"}
 Resultado: ${context.result || "Não informado"}
 Tecnologias: ${Array.isArray(context.technologies) ? context.technologies.join(", ") : "Não informado"}`;
         break;
+
+      case "project-extract":
+        userPrompt = `Extraia problema, solução, impacto e métricas do projeto:
+Título: ${context.title || "Projeto"}
+Resultado mencionado: ${context.result || "Não informado"}
+Tecnologias: ${Array.isArray(context.technologies) ? context.technologies.join(", ") : "Não informado"}
+Descrição: ${context.description || "Não informado"}`;
+        break;
         
       case "proposal-intro":
         userPrompt = `Escreva uma introdução para proposta:
 Nome do cliente: ${context.clientName || "Cliente"}
 Nome do profissional: ${context.professionalName || "Profissional"}
 Área de atuação: ${context.area || "Design"}
-Projetos incluídos: ${context.projectCount || 1} projeto(s)`;
+Projetos incluídos: ${context.projects || "1 projeto"}`;
         break;
         
       case "proposal-justification":
@@ -137,6 +196,31 @@ Prazo estimado: ${context.deadline || "A combinar"}`;
 Nome do cliente: ${context.clientName || "Cliente"}
 Nome do profissional: ${context.professionalName || "Profissional"}
 Próximos passos sugeridos: ${context.nextSteps || "Reunião de alinhamento"}`;
+        break;
+
+      case "proposal-exclusions":
+        userPrompt = `Gere uma lista do que NÃO está incluso:
+Nome do cliente: ${context.clientName || "Cliente"}
+Projetos: ${context.projects || "Projeto geral"}
+Valor total: R$ ${context.totalValue || "0"}`;
+        break;
+
+      case "proposal-terms":
+        userPrompt = `Gere termos e condições:
+Nome do cliente: ${context.clientName || "Cliente"}
+Valor total: R$ ${context.totalValue || "0"}
+Validade: ${context.validityDays || 15} dias`;
+        break;
+
+      case "proposal-timeline":
+        userPrompt = `Gere um cronograma de projeto:
+Projetos: ${context.projects || "Projeto geral"}
+Valor total: R$ ${context.totalValue || "0"}`;
+        break;
+
+      case "proposal-deliverables":
+        userPrompt = `Gere uma lista de entregáveis:
+Projetos: ${context.projects || "Projeto geral"}`;
         break;
     }
 

@@ -13,6 +13,7 @@ import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import Projects from "./pages/Projects";
 import ProjectEditor from "./pages/ProjectEditor";
+import QuickProject from "./pages/QuickProject";
 import Portfolio from "./pages/Portfolio";
 import Proposals from "./pages/Proposals";
 import ProposalEditor from "./pages/ProposalEditor";
@@ -42,6 +43,7 @@ const App = () => (
                       <Route path="/dashboard" element={<Dashboard />} />
                       <Route path="/projects" element={<Projects />} />
                       <Route path="/projects/:id" element={<ProjectEditor />} />
+                      <Route path="/projects/quick" element={<QuickProject />} />
                       <Route path="/portfolio" element={<Portfolio />} />
                       <Route path="/proposals" element={<Proposals />} />
                       <Route path="/proposals/:id" element={<ProposalEditor />} />
