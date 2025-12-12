@@ -99,6 +99,7 @@ export type Database = {
           ideal_client: string | null
           name: string | null
           niche: string | null
+          niche_framework: string | null
           plan: Database["public"]["Enums"]["user_plan"]
           portfolio_objective: string | null
           proposal_count: number
@@ -114,6 +115,7 @@ export type Database = {
           ideal_client?: string | null
           name?: string | null
           niche?: string | null
+          niche_framework?: string | null
           plan?: Database["public"]["Enums"]["user_plan"]
           portfolio_objective?: string | null
           proposal_count?: number
@@ -129,6 +131,7 @@ export type Database = {
           ideal_client?: string | null
           name?: string | null
           niche?: string | null
+          niche_framework?: string | null
           plan?: Database["public"]["Enums"]["user_plan"]
           portfolio_objective?: string | null
           proposal_count?: number
@@ -147,8 +150,12 @@ export type Database = {
           execution_description: string | null
           id: string
           images: string[]
+          impact_description: string | null
           links: Json
+          problem_statement: string | null
           result_description: string | null
+          result_metrics: string | null
+          solution_summary: string | null
           status: string
           technologies: string[]
           title: string
@@ -165,8 +172,12 @@ export type Database = {
           execution_description?: string | null
           id?: string
           images?: string[]
+          impact_description?: string | null
           links?: Json
+          problem_statement?: string | null
           result_description?: string | null
+          result_metrics?: string | null
+          solution_summary?: string | null
           status?: string
           technologies?: string[]
           title: string
@@ -183,8 +194,12 @@ export type Database = {
           execution_description?: string | null
           id?: string
           images?: string[]
+          impact_description?: string | null
           links?: Json
+          problem_statement?: string | null
           result_description?: string | null
+          result_metrics?: string | null
+          solution_summary?: string | null
           status?: string
           technologies?: string[]
           title?: string
@@ -203,6 +218,8 @@ export type Database = {
           closing: string | null
           cover_image_url: string | null
           created_at: string
+          deliverables: string | null
+          exclusions: string | null
           id: string
           introduction: string | null
           justification: string | null
@@ -211,10 +228,13 @@ export type Database = {
           project_ids: string[]
           share_token: string | null
           status: Database["public"]["Enums"]["proposal_status"]
+          terms: string | null
+          timeline: string | null
           title: string
           total_value: number
           updated_at: string
           user_id: string
+          validity_days: number | null
           viewed_at: string | null
         }
         Insert: {
@@ -225,6 +245,8 @@ export type Database = {
           closing?: string | null
           cover_image_url?: string | null
           created_at?: string
+          deliverables?: string | null
+          exclusions?: string | null
           id?: string
           introduction?: string | null
           justification?: string | null
@@ -233,10 +255,13 @@ export type Database = {
           project_ids?: string[]
           share_token?: string | null
           status?: Database["public"]["Enums"]["proposal_status"]
+          terms?: string | null
+          timeline?: string | null
           title: string
           total_value?: number
           updated_at?: string
           user_id: string
+          validity_days?: number | null
           viewed_at?: string | null
         }
         Update: {
@@ -247,6 +272,8 @@ export type Database = {
           closing?: string | null
           cover_image_url?: string | null
           created_at?: string
+          deliverables?: string | null
+          exclusions?: string | null
           id?: string
           introduction?: string | null
           justification?: string | null
@@ -255,10 +282,13 @@ export type Database = {
           project_ids?: string[]
           share_token?: string | null
           status?: Database["public"]["Enums"]["proposal_status"]
+          terms?: string | null
+          timeline?: string | null
           title?: string
           total_value?: number
           updated_at?: string
           user_id?: string
+          validity_days?: number | null
           viewed_at?: string | null
         }
         Relationships: []
