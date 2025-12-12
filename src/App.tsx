@@ -15,12 +15,14 @@ import Projects from "./pages/Projects";
 import ProjectEditor from "./pages/ProjectEditor";
 import QuickProject from "./pages/QuickProject";
 import Portfolio from "./pages/Portfolio";
+import PublicPortfolio from "./pages/PublicPortfolio";
 import Proposals from "./pages/Proposals";
 import ProposalEditor from "./pages/ProposalEditor";
 import PublicProposal from "./pages/PublicProposal";
 import Analytics from "./pages/Analytics";
 import Auth from "./pages/Auth";
 import Profile from "./pages/Profile";
+import BriefingModels from "./pages/BriefingModels";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -45,11 +47,13 @@ const App = () => (
                       <Route path="/projects/:id" element={<ProjectEditor />} />
                       <Route path="/projects/quick" element={<QuickProject />} />
                       <Route path="/portfolio" element={<Portfolio />} />
+                      <Route path="/portfolio/:username" element={<PublicPortfolio />} />
                       <Route path="/proposals" element={<Proposals />} />
                       <Route path="/proposals/:id" element={<ProposalEditor />} />
                       <Route path="/p/:token" element={<PublicProposal />} />
                       <Route path="/analytics" element={<Analytics />} />
                       <Route path="/profile" element={<Profile />} />
+                      <Route path="/briefing-models" element={<BriefingModels />} />
                       <Route path="*" element={<NotFound />} />
                     </Routes>
                   </BrowserRouter>

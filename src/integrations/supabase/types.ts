@@ -53,6 +53,102 @@ export type Database = {
         }
         Relationships: []
       }
+      briefing_models: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_public: boolean
+          questions: Json
+          share_token: string | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_public?: boolean
+          questions?: Json
+          share_token?: string | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_public?: boolean
+          questions?: Json
+          share_token?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      leads: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          message: string | null
+          name: string
+          phone: string | null
+          project_id: string | null
+          proposal_id: string | null
+          source: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          message?: string | null
+          name: string
+          phone?: string | null
+          project_id?: string | null
+          proposal_id?: string | null
+          source?: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          message?: string | null
+          name?: string
+          phone?: string | null
+          project_id?: string | null
+          proposal_id?: string | null
+          source?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "leads_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "leads_proposal_id_fkey"
+            columns: ["proposal_id"]
+            isOneToOne: false
+            referencedRelation: "proposals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       portfolio_settings: {
         Row: {
           columns: number
@@ -93,6 +189,7 @@ export type Database = {
         Row: {
           area: string | null
           bio: string | null
+          calendly_url: string | null
           created_at: string
           experience_level: string | null
           id: string
@@ -103,12 +200,15 @@ export type Database = {
           plan: Database["public"]["Enums"]["user_plan"]
           portfolio_objective: string | null
           proposal_count: number
+          show_contact_form: boolean | null
           updated_at: string
           user_id: string
+          username: string | null
         }
         Insert: {
           area?: string | null
           bio?: string | null
+          calendly_url?: string | null
           created_at?: string
           experience_level?: string | null
           id?: string
@@ -119,12 +219,15 @@ export type Database = {
           plan?: Database["public"]["Enums"]["user_plan"]
           portfolio_objective?: string | null
           proposal_count?: number
+          show_contact_form?: boolean | null
           updated_at?: string
           user_id: string
+          username?: string | null
         }
         Update: {
           area?: string | null
           bio?: string | null
+          calendly_url?: string | null
           created_at?: string
           experience_level?: string | null
           id?: string
@@ -135,8 +238,10 @@ export type Database = {
           plan?: Database["public"]["Enums"]["user_plan"]
           portfolio_objective?: string | null
           proposal_count?: number
+          show_contact_form?: boolean | null
           updated_at?: string
           user_id?: string
+          username?: string | null
         }
         Relationships: []
       }
